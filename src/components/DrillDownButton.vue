@@ -70,12 +70,12 @@ defineEmits(['click'])
   font-size: 1rem;
   position: relative;
   z-index: 1;
+  color: #fff;
   transition: all 0.3s ease;
 }
 
 .drill-down-btn:hover .btn-title {
-  color: #ffd700;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  color: #fff;
 }
 
 .btn-count {
