@@ -8,8 +8,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vite build && cp 404.html dist/ 2>/dev/null || copy 404.html dist\\ 2>nul || echo 'Note: Copy 404.html to dist folder manually for GitHub Pages'",
+    "preview": "vite preview",
+    "deploy": "npm run build && echo 'Build complete! Deploy the dist folder to GitHub Pages.'"
   },
   "dependencies": {
     "vue": "^3.5.22",
