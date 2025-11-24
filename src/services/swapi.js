@@ -24,6 +24,7 @@ export async function getMovies() {
   return data.results
 }
 
+
 /**
  * Fetch a single movie by ID
  */
