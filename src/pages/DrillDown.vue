@@ -29,7 +29,7 @@
                   class="detail-row"
                 >
                   <span class="detail-label">{{ formatLabel(key) }}:</span>
-                  <span class="detail-value">{{ formatValue(value) }}</span>
+                  <span class="detail-value">{{ formatValue(value, key) }}</span>
                 </div>
               </div>
             </div>
@@ -43,7 +43,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getMovies, fetchMultipleResources } from '../services/swapi'
+import { getMovies, fetchMultipleResources, getPlanet } from '../services/swapi'
 
 const router = useRouter()
 const route = useRoute()
@@ -53,6 +53,7 @@ const loading = ref(true)
 const error = ref(null)
 const movieTitle = ref('')
 const movie = ref(null)
+const planetNames = ref({}) // Map of planet URLs to planet names
 
 const movieId = parseInt(route.params.id)
 const type = route.params.type
@@ -61,7 +62,7 @@ const detailFields = {
   characters: ['name', 'height', 'mass', 'hair_color', 'skin_color', 'eye_color', 'birth_year'],
   starships: ['name', 'model', 'manufacturer', 'length', 'crew', 'passengers', 'starship_class'],
   vehicles: ['name', 'model', 'manufacturer', 'cost_in_credits', 'length', 'max_atmosphering_speed', 'crew', 'passengers', 'cargo_capacity', 'consumables', 'vehicle_class'],
-  species: ['name', 'classification', 'designation', 'average_height', 'average_lifespan', 'language', 'homeworld']
+  species: ['name', 'classification', 'designation', 'average_height', 'skin_colors', 'hair_colors', 'eye_colors', 'average_lifespan', 'homeworld', 'language']
 }
 
 onMounted(async () => {
@@ -100,11 +101,37 @@ async function loadItems() {
 
     const data = await fetchMultipleResources(urls)
     items.value = data.filter(item => item !== null)
+
+    // If loading species, fetch homeworld planet names
+    if (type === 'species') {
+      await loadPlanetNames()
+    }
   } catch (err) {
     error.value = `Failed to load ${type}. Please try again.`
     console.error(err)
   } finally {
     loading.value = false
+  }
+}
+
+async function loadPlanetNames() {
+  const homeworldUrls = items.value
+    .map(item => item.homeworld)
+    .filter(url => url && url !== 'null' && url !== null)
+
+  if (homeworldUrls.length === 0) {
+    return
+  }
+
+  try {
+    const planets = await fetchMultipleResources(homeworldUrls)
+    planets.forEach(planet => {
+      if (planet && planet.url && planet.name) {
+        planetNames.value[planet.url] = planet.name
+      }
+    })
+  } catch (err) {
+    console.error('Error loading planet names:', err)
   }
 }
 
@@ -132,10 +159,16 @@ function formatLabel(key) {
     .join(' ')
 }
 
-function formatValue(value) {
-  if (value === 'n/a' || value === 'unknown' || value === 'none') {
+function formatValue(value, key) {
+  if (value === 'n/a' || value === 'unknown' || value === 'none' || value === null) {
     return 'N/A'
   }
+  
+  // Handle homeworld - display planet name instead of URL
+  if (key === 'homeworld' && typeof value === 'string' && value.startsWith('http')) {
+    return planetNames.value[value] || 'Loading...'
+  }
+  
   return value
 }
 

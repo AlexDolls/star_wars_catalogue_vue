@@ -60,6 +60,13 @@ export async function getSpecies(url) {
 }
 
 /**
+ * Fetch planet details
+ */
+export async function getPlanet(url) {
+  return await fetchData(url)
+}
+
+/**
  * Fetch multiple resources in parallel
  */
 export async function fetchMultipleResources(urls) {
